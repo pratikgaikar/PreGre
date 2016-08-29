@@ -1,0 +1,468 @@
+﻿<!DOCTYPE html>
+<html ng-app="starter">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title></title>
+    <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+</head>	
+<body> 
+    <ion-nav-bar class="bar-positive"></ion-nav-bar>
+    <ion-nav-view></ion-nav-view>
+
+    <script id="templates/tabs.html" type="text/ng-template">
+    	<ion-tabs class="tabs-icon-top tabs-positive">
+            <ion-tab title="Home" icon="ion-home" href="#/tab/home">
+                <ion-nav-view name="home-tab"></ion-nav-view>
+            </ion-tab>          
+            <ion-tab title="Progress" icon="ion-ios-pulse-strong" ui-sref="tabs.contact">
+                <ion-nav-view name="contact-tab"></ion-nav-view>
+            </ion-tab>
+			<ion-tab title="Settings" icon="ion-ios-settings" ui-sref="tabs.setting">
+                <ion-nav-view name="setting-tab"></ion-nav-view>
+            </ion-tab>
+        </ion-tabs>	
+    </script>
+    <script id="templates/home.html" type="text/ng-template">
+        <ion-view view-title="Home">
+							
+		     <ion-content class="padding">
+                <p>
+                    <a class="button button-block button-dark icon icon-right ion-chevron-right" href="#/tab/testlist">Text Completion</a>
+                    <a class="button button-block button-dark icon icon-right ion-chevron-right" href="#/tab/testlistSentence"> Senetence Equivalence</a> 
+                    <a class="button button-block button-dark icon icon-right ion-chevron-right" href="#/tab/highfrqwords"> High Frequency words</a> 				 
+				
+            </ion-content>			
+        </ion-view>
+    </script>
+	 <script id="templates/highfrqwords.html" type="text/ng-template">
+        <ion-view view-title="High Frequency Words">
+			<ion-nav-bar class="bar-positive">
+                     <ion-nav-buttons side="left">
+							<button  class="button button-icon icon ion-android-arrow-back" ng-click="back()"></button>
+						</ion-nav-buttons> 	
+				</ion-nav-bar>			
+            <ion-content class="padding" >									
+					<ion-list class="item-divider">
+						 <a class="item"  ng-href="#/tab/loadwordlist/{{item.title}}" ng-repeat="item in wordlistmain">
+							 {{item.title}} 
+							  <progress><bar ng-repeat="bar in item.count track by $index" value="bar.value/25*100" type="{{bar.type}}">{{bar.value}} {{bar.type=="success" ? "Mastered" : "Difficult" }}</bar></progress>
+						 </a>
+				    </ion-list>
+            </ion-content>			
+        </ion-view>
+    </script>
+	 <script id="templates/loadwordlistview.html" type="text/ng-template">
+        <ion-view view-title="{{testtitle}}">
+		      <ion-side-menus>			    
+				<ion-nav-bar class="bar-positive">
+						<ion-nav-buttons side="left">
+						     <button class="button button-icon icon ion-android-arrow-back" ng-click="exitword()"></button> 
+						</ion-nav-buttons>
+						<ion-nav-buttons side="right">
+							<button menu-toggle="right" class="button button-icon icon ion-navicon"></button>
+						</ion-nav-buttons>
+				</ion-nav-bar>				
+				<ion-side-menu-content  drag-content="false">             		
+					<ion-content class="padding">			   
+					<ion-slide-box on-slide-changed="slideHasChanged($index)" show-pager="false" class="slider">
+					  <ion-slide ng-repeat="word in words">	                      
+						<div class="list" style="text-align:center">							
+							  <div class="item item-divider assertive" > 
+								{{word.name}}
+							  </div>
+							  <div class="item item-text-wrap">
+								{{word.meaning}}
+							  </div>							
+						</div>					                         						
+						<div style="text-align:center"> 
+						    
+							<button ng-hide="hidefunctionmaster($index)" class="button icon-left ion-happy-outline button-balanced" ng-click="addtomaster($index)">Mastered</button>
+							<button ng-hide="hidefunctiondifficult($index)" class="button icon-left ion-sad-outline 	button-assertive" ng-click="addtodifficult($index)">Difficult</button>
+						</div>
+							<div layout="row" layout-sm="column" layout-align="space-around">
+								
+							</div>						
+					  </ion-slide>			
+					</ion-slide-box>            	
+				</ion-content>
+			<ion-footer-bar align-title="left" class="bar-default">
+			      <div class="col">
+				<progress><bar ng-repeat="bar in item track by $index" value="bar.value/25*100" type="{{bar.type}}">{{bar.value}} {{bar.type=="success"  ? "Mastered" : "Difficult" }}</bar></progress>  		</div>
+			</ion-footer-bar>	
+		</ion-side-menu-content>
+		<ion-side-menu side="right" width="175">
+        <ion-content has-header="true">
+			<ul class="list" ng-repeat="temp in words"> 
+					<a  menu-close class="item" ng-click="loadword($index)"> {{temp.name}}
+                     <span ng-class="{'ion-happy-outline pull-right balanced' : temp.ismaster ? true : false, 'icon-left ion-sad-outline pull-right assertive' :temp.isdifficult ? true : false  }"></span> 
+                    </a>
+			</ul>
+        </ion-content>		
+		</ion-side-menu>
+		</ion-side-menus>	
+        </ion-view>
+    </script>
+    <script id="templates/testlist.html" type="text/ng-template">
+        <ion-view view-title="Text Completion">	
+				<ion-nav-bar class="bar-positive">
+                     <ion-nav-buttons side="left">
+							<button  class="button button-icon icon ion-android-arrow-back" ng-click="back()"></button>
+						</ion-nav-buttons> 	
+				</ion-nav-bar>				
+            <ion-content class="padding">
+                <ion-list>
+				 <a ng-class="{'button button-block icon icon-right ion-chevron-right' :  true ,'button-balanced' : item.completed >0 ? true : false,'button-dark' : item.completed ==0 ? true : false  }"  ng-href="#/tab/loadtest/{{item.title}}" ng-repeat="item in questions">
+					 {{item.title}} 
+				 </a>
+                </ion-list>
+            </ion-content>
+        </ion-view>
+    </script>
+	<script id="templates/testlistSentence.html" type="text/ng-template">
+        <ion-view view-title="Sentence Equivalence">
+	        	<ion-nav-bar class="bar-positive">
+                     <ion-nav-buttons side="left">
+							<button  class="button button-icon icon ion-android-arrow-back" ng-click="back()"></button>
+						</ion-nav-buttons> 	
+				</ion-nav-bar>	
+            <ion-content class="padding">
+                <ion-list>
+				 <a ng-class="{'button button-block icon icon-right ion-chevron-right' :  true ,'button-balanced' : item.completed >0 ? true : false,'button-dark' : item.completed ==0 ? true : false  }"  ng-href="#/tab/loadStest/{{item.title}}" ng-repeat="item in questions">
+					 {{item.title}} 
+				 </a>
+                 </ion-list>
+            </ion-content>
+        </ion-view>
+    </script>
+    <script id="templates/loadtestview.html" type="text/ng-template">
+        <ion-view view-title="{{testtitle}}">
+		    <ion-side-menus>			 
+				<ion-nav-bar class="bar-positive">
+						<ion-nav-buttons side="left">
+							<button menu-toggle="left" class="button button-icon icon ion-navicon"></button>
+						</ion-nav-buttons>
+						<ion-nav-buttons side="right">
+							<button class="button button-icon icon ion-android-exit" ng-click="ExitTest()"></button>
+						</ion-nav-buttons>
+				</ion-nav-bar>				
+				<ion-side-menu-content>
+			
+				  <ion-content>
+					<div class="card">
+                    <div class="item item-text-wrap item-divider ">
+                     {{ questionno }}. {{questiontitle}}
+                    </div>					
+					<div class="item item-text-wrap">
+                        <ion-radio  ng-value={{option.value}} ng-model="temp" ng-change="retianradiovalue(option.value)" ng-repeat="option in questionoptions">{{option.text}}</ion-radio>
+                    </div>				
+					</div>	
+					</ion-content>					
+					<ion-footer-bar align-title="left" class="bar-default">
+                    <button class="button icon-left ion-chevron-left button-clear button-dark" ng-click="loadpreviousquestion()">Back</button>
+					<div class="col col-33" style=" margin-left:16%">
+				    <progressbar class="progress-striped active" value="counter" max="1500" type="danger"> <div class="ion-android-stopwatch"> {{ counter | secondsToDateTime | date:'mm:ss'}}</div></progressbar>
+					</div>
+                    <button class="button icon-right ion-chevron-right button-clear button-dark pull-right" ng-hide="flag" ng-click="loadnextquestion()">Next</button>
+					<button class="button button-positive pull-right" ng-click="showConfirm()" ng-hide="!flag">
+									Submit
+					</button>
+					</ion-footer-bar>
+				</ion-side-menu-content>
+				<ion-side-menu width="150" side="left">
+					<ion-content has-header="true">
+						<ul class="list" ng-repeat="temp in testanalysis.question"> 
+							<a  menu-close class="item" ng-click="loadquestion($index)">Question {{$index+1}}</a>		
+						</ul>
+					</ion-content>
+				</ion-side-menu>
+		  </ion-side-menus>
+	    </ion-view>
+    </script>	
+	<script id="templates/previewresult.html" type="text/ng-template">
+	<ion-view view-title="Test Preview">
+           
+		 <ion-side-menus>
+            <ion-nav-bar class="bar-positive">
+						<ion-nav-buttons side="left">
+						<button menu-toggle="left" class="button button-icon icon ion-navicon"></button>
+						</ion-nav-buttons>
+			</ion-nav-bar>
+        <ion-side-menu-content>
+						
+				<ion-content>
+			 <div class="card">
+                    <div class="item item-text-wrap item-divider ">
+                      {{ questionno }}.{{questiontitle}}
+                    </div>
+					<div class="item item-text-wrap">
+                        <div class="item" ng-repeat="option in questionoptions">{{option.text}} <span ng-class="{'ion-checkmark-round pull-right balanced': option.value==questionanswer ? true : false,'ion-close-round pull-right assertive' : (option.value == retainvalue && option.value!=questionanswer) ? true : false}" ></span></div>
+                    </div>
+             </div>
+			 </ion-content>
+			 	</ion-slide-box>
+				<ion-footer-bar align-title="left" class="bar-default">
+                    <button class="button icon-left ion-chevron-left button-clear button-dark" ng-click="loadpreviousquestion()">Back</button>				
+                    <button class="button icon-right ion-chevron-right button-clear button-dark pull-right" ng-hide="flag" ng-click="loadnextquestion()">Next</button>					
+				</ion-footer-bar>
+			 
+		</ion-side-menu-content>
+        <ion-side-menu width="150" side="left">
+            <ion-content has-header="true">
+			    <ion-list>
+					<ion-item  menu-close ng-repeat="temp in testanalysis.question" ng-click="loadquestion($index)" > Question {{$index+1}}
+                   <span ng-class="{'ion-checkmark-round pull-right balanced' : retainvalueobj[$index] == temp.answer[0] ? true : false, 'ion-close-round pull-right assertive' : retainvalueobj[$index] != temp.answer[0] ? true : false  }"></span> 
+					</ion-item>
+					</ion-list>
+            </ion-content>
+        </ion-side-menu>
+		 </ion-side-menus>
+	</ion-view>
+	</script>
+	<script id="templates/previewsresult.html" type="text/ng-template">
+	<ion-view view-title="Test Preview">           
+		 <ion-side-menus>
+            <ion-nav-bar class="bar-positive">
+						<ion-nav-buttons side="left">
+						<button menu-toggle="left" class="button button-icon icon ion-navicon"></button>
+						</ion-nav-buttons>
+			</ion-nav-bar>
+        <ion-side-menu-content>
+		
+				<ion-content>
+			 <div class="card">
+                    <div class="item item-text-wrap item-divider ">
+                       {{ questionno }}.{{questiontitle}}
+                    </div>
+					<div class="item item-text-wrap">
+                        <div class="item" ng-repeat="option in questionoptions" style="font-size:12px">{{option.text}} 
+							<span ng-class="{'ion-checkmark-round pull-right balanced': (option.value==questionanswer || option.value==questionanswer1) ? true : false,
+							'ion-close-round pull-right assertive' : wrongf[$index] ? true : false}">
+							</span>
+						</div>
+                    </div>
+             </div>
+			 	</ion-content>
+				<ion-footer-bar align-title="left" class="bar-default">
+                    <button class="button icon-left ion-chevron-left button-clear button-dark" ng-click="loadpreviousquestion()">Back</button>				
+                    <button class="button icon-right ion-chevron-right button-clear button-dark pull-right" ng-hide="flag" ng-click="loadnextquestion()">Next</button>					
+				</ion-footer-bar>			 
+		</ion-side-menu-content>
+        <ion-side-menu width="150" side="left">
+            <ion-content has-header="true">
+			    <ion-list>
+				<ion-item  menu-close ng-repeat="temp in testanalysis.question" ng-click="loadquestion($index)"> Question {{$index+1}}
+                  <span ng-class="{'ion-checkmark-round pull-right balanced' : testcorrect[$index] ? true : false, 'ion-close-round pull-right assertive' : !testcorrect[$index]  ? true : false  }"></span>
+				</ion-item>
+				</ion-list>
+            </ion-content>
+        </ion-side-menu>
+		 </ion-side-menus>
+	</ion-view>
+	</script>
+	<script id="templates/loadStestview.html" type="text/ng-template">
+        <ion-view view-title="{{testtitle}}">
+           <ion-side-menus>		 
+		     <ion-nav-bar class="bar-positive">
+						<ion-nav-buttons side="left">
+							<button menu-toggle="left" class="button button-icon icon ion-navicon"></button>
+						</ion-nav-buttons>
+						<ion-nav-buttons side="right">
+							<button class="button button-icon icon ion-android-exit" ng-click="ExitTest()"></button>
+						</ion-nav-buttons>
+				</ion-nav-bar>
+		   
+		       <ion-side-menu-content>
+		
+				<ion-content>
+		        <div class="card">
+                    <div class="item item-text-wrap">
+                       {{ questionno }}. {{questiontitle}}
+                    </div>
+					
+                    <div class="item" >
+					
+                        <ion-checkbox style="font-size:12px" ng-model="option.check"  ng-checked="option.check"  ng-repeat="option in questionoptions">{{option.text}}</ion-radio>
+                    </div>
+			
+                </div>	
+			</ion-content>				
+			<ion-footer-bar align-title="left" class="bar-default">
+			<button class="button icon-left ion-chevron-left button-clear button-dark" ng-click="loadpreviousquestion()">Back</button>
+            	<div class="col col-33" style=" margin-left:16%">
+				    <progressbar class="progress-striped active" value="counter" max="600" type="danger">  <div class="ion-android-stopwatch"> {{ counter | secondsToDateTime | date:'mm:ss'}}</div></progressbar>
+				</div>
+				<button class="button icon-right ion-chevron-right button-clear button-dark pull-right" ng-hide="flag" ng-click="loadnextquestion()">Next</button>
+				<button class="button button-positive pull-right" ng-click="showConfirm()" ng-hide="!flag">
+						Submit
+				</button>
+	        </ion-footer-bar>
+				</ion-side-menu-content>
+				<ion-side-menu width="150" side="left">
+					<ion-content has-header="true">
+						<ul class="list" ng-repeat="temp in testanalysis.question"> 
+							<a  menu-close class="item" ng-click="loadquestion($index)">Question {{$index+1}}</a>
+						</ul>
+					</ion-content>
+				</ion-side-menu>
+         </ion-side-menus>
+        </ion-view>
+    </script>
+	<script id="templates/result.html" type="text/ng-template">
+        <ion-view  title="Result">
+            <ion-content class="padding">
+				<div class="row padding" >
+				<div class="col" style="text-align:center">
+				
+					<div class="item" style="font-size:15px" >
+					Total Question :  25	
+					</div>
+					<div class="item" style="font-size:15px">
+					Right Answer : {{rightans}}
+					</div>
+					<div class="item" style="font-size:15px">
+					Wrong Answer : {{wrongans}}
+					</div>
+				</div>
+				</div>
+				<div class="row padding">
+					<div class="col">
+						<div class="col" style="text-align:center"><canvas piechart  options="options" data="data1" width="150" height="150"></canvas></div>						
+					</div>
+				</div>		
+			<div class="row">
+				<div class="col" style="text-align:center" >
+                   <a class="button-icon icon ion-document-text pull-middle button-default" href="#/tab/previewresult"></a>
+				</div>
+			</div>		
+		 </ion-content>
+	  </ion-view>	   
+    </script>
+	<script id="templates/sresult.html" type="text/ng-template">
+        <ion-view  title="Result">
+            <ion-content class="padding">
+			<div class="row padding" >
+				<div class="col" style="text-align:center">
+				
+					<div class="item" style="font-size:15px" >
+					Total Question :  10	
+					</div>
+					<div class="item" style="font-size:15px">
+					Right Answer : {{rightans}}
+					</div>
+					<div class="item" style="font-size:15px">
+					Wrong Answer : {{wrongans}}
+					</div>
+				 </div>
+			</div>
+			<div class="row padding">
+					<div class="col">
+						<div class="col" style="text-align:center"><canvas piechart  options="options" data="data1" width="150" height="150"></canvas></div>
+					</div>
+		    </div>
+			<div class="row">
+				<div class="col" style="text-align:center" >
+                   <a class="button-icon icon ion-document-text pull-middle button-default" href="#/tab/previewsresult"></a>
+				</div>
+			</div>				
+	  </ion-content>	  
+	  </ion-view>	   
+    </script>
+	<script id="templates/contact.html" type="text/ng-template">
+        <ion-view title="Progress">		
+            <ion-content>		    
+			
+			<ion-slide-box on-slide-changed="slideHasChanged($index)" show-pager="false">
+			<ion-slide>
+			<div class="row">
+				<div class="col">
+                       <canvas barchart options="options" data="data" width="300" height="300"></canvas>					   
+				</div>				
+            </div>		
+			<div class="list" style="text-align:center">
+
+					<div class="item item-divider assertive">
+						<h2>Text Completion</h2>
+					</div>
+					<div class="item">
+							Test Attempted :  {{tcount }}/20
+					</div>
+			</div>	
+			<div class="list" style="text-align:center">
+				<div class="item item-divider assertive">
+						<h2>Sentence Equivalence</h2>
+				</div>
+				<div class="item">
+							Test Attempted :  {{scount }}/20
+				</div>
+			</div>			
+			</ion-slide>			
+            <ion-slide>
+			<div class="row">
+			<div class="col">
+                      	<div class="col" style="text-align:center"><canvas piechart  options="options" data="data1" width="150" height="150"></canvas></div>	
+			</div>
+            </div>		
+			<div class="list" style="text-align:center">
+				<div class="item item-divider assertive">
+						<h2>Words</h2>
+				</div>
+				<div class="col" style="text-align:center">
+				
+					<div class="item" style="font-size:15px" >
+					Total Words : {{total}}
+					</div>
+					<div class="item" style="font-size:15px">
+					Mastered Words: {{masterwordcount}} 
+					</div>
+					<div class="item" style="font-size:15px">
+					Difficult Words : {{difficultwordcount}} 
+					</div>
+				 </div>
+						
+			
+                 
+			</div>
+			</ion-slide>					
+			</ion-slide-box>
+            </ion-content>
+        </ion-view>
+    </script>
+	<script id="templates/setting.html" type="text/ng-template">
+	  <ion-view title="Settings">	
+				<ion-nav-bar class="bar-positive">
+                     <ion-nav-buttons side="right">
+							<button  class="button button-icon icon ion-ios-star-outline" ng-click="rateapp()"></button>
+						</ion-nav-buttons> 	
+				</ion-nav-bar>		  
+            <ion-content>
+			<ul class="list">
+			  <li class="item item-toggle">
+				 Reset Word List
+				 <label class="toggle toggle-assertive">
+				   <input id="chkbox" type="checkbox" ng-click="chkbox()">
+				   <div class="track">
+					 <div class="handle"></div>
+				   </div>
+				 </label>
+			  </li>
+			</ul>			
+			</ion-content>			
+	  </ion-view>
+	</script>
+	
+	<script src="lib/ionic/js/ionic.bundle.js"></script>
+    <script type="text/javascript" src="js/testapp.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <!-- cordova script (this will be a 404 during development) -->
+	<script src="js/ng-cordova.js"></script>
+    <script src="cordova.js"></script>
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>	
+	<script src="js/ui-bootstrap-tpls-0.13.0.min.js"></script>
+    <script src="js/angles.js"></script>
+	<script src="js/Chart.min.js"></script>
+</body>
+</html>
